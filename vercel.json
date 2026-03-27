@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "remix",
+  "outputDirectory": "build/client",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "env-variations": {
+    "preview": {
+      "NODE_ENV": "development"
+    }
+  },
+  "analytics": true,
+  "trailingSlash": false
+}

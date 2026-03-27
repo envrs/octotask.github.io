@@ -1,3 +1,6 @@
+import AbacusAIProvider from './providers/abacusai';
+import AIHubMixProvider from './providers/aihmix';
+import AlibabaDAshScopeProvider from './providers/dashscope';
 import AnthropicProvider from './providers/anthropic';
 import CerebrasProvider from './providers/cerebras';
 import CohereProvider from './providers/cohere';
@@ -8,11 +11,13 @@ import GroqProvider from './providers/groq';
 import HuggingFaceProvider from './providers/huggingface';
 import LMStudioProvider from './providers/lmstudio';
 import MistralProvider from './providers/mistral';
+import NeomodelsProvider from './providers/neomodels';
 import OllamaProvider from './providers/ollama';
 import OpenRouterProvider from './providers/open-router';
 import OpenAILikeProvider from './providers/openai-like';
 import OpenAIProvider from './providers/openai';
 import PerplexityProvider from './providers/perplexity';
+import Provider302AI from './providers/302ai';
 import TogetherProvider from './providers/together';
 import XAIProvider from './providers/xai';
 import HyperbolicProvider from './providers/hyperbolic';
@@ -22,6 +27,9 @@ import MoonshotProvider from './providers/moonshot';
 import ZaiProvider from './providers/z-ai';
 
 export {
+  AbacusAIProvider,
+  AIHubMixProvider,
+  AlibabaDAshScopeProvider,
   AnthropicProvider,
   CerebrasProvider,
   CohereProvider,
@@ -33,11 +41,13 @@ export {
   HyperbolicProvider,
   MistralProvider,
   MoonshotProvider,
+  NeomodelsProvider,
   OllamaProvider,
   OpenAIProvider,
   OpenRouterProvider,
   OpenAILikeProvider,
   PerplexityProvider,
+  Provider302AI,
   XAIProvider,
   TogetherProvider,
   LMStudioProvider,

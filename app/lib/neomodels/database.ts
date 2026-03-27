@@ -1,0 +1,368 @@
+/**
+ * Neomodels Database Manager
+ * Handles fetching, caching, and querying models from neomodels.vercel.app
+ * Uses intelligent caching (24-hour TTL) to minimize API calls
+ */
+
+import type { NeoModel, NeoModelProvider, NeomodeelsDatabase, NeomodelsCacheConfig, NeomodelsSearchOptions, NeomodelsSearchResult } from './types';
+
+// Default cache configuration (24 hours)
+const DEFAULT_CACHE_CONFIG: NeomodelsCacheConfig = {
+  ttl: 24 * 60 * 60 * 1000,
+  storageKey: 'neomodels_cache_v1',
+  maxSize: 1000,
+};
+
+class NeomodelsDatabase {
+  private database: NeomodeelsDatabase | null = null;
+  private cacheConfig: NeomodelsCacheConfig;
+  private isInitialized = false;
+  private initPromise: Promise<void> | null = null;
+
+  constructor(cacheConfig?: Partial<NeomodelsCacheConfig>) {
+    this.cacheConfig = { ...DEFAULT_CACHE_CONFIG, ...cacheConfig };
+  }
+
+  /**
+   * Initialize the database, either from cache or by fetching fresh data
+   */
+  async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = this.performInitialization();
+    await this.initPromise;
+  }
+
+  private async performInitialization(): Promise<void> {
+    try {
+      // Try to load from cache first
+      const cached = this.loadFromCache();
+      if (cached && !this.isCacheExpired(cached)) {
+        this.database = cached;
+        this.isInitialized = true;
+        return;
+      }
+
+      // Fetch fresh data from neomodels API
+      this.database = await this.fetchFromNeomodels();
+      this.saveToCache(this.database);
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('Failed to initialize neomodels database:', error);
+      // Fallback to empty database
+      this.database = this.createEmptyDatabase();
+      this.isInitialized = true;
+    }
+  }
+
+  /**
+   * Fetch all models from neomodels.vercel.app
+   */
+  private async fetchFromNeomodels(): Promise<NeomodeelsDatabase> {
+    const database: NeomodeelsDatabase = {
+      providers: new Map(),
+      allModels: new Map(),
+      categories: new Map(),
+      lastUpdated: Date.now(),
+      version: '1.0.0',
+    };
+
+    try {
+      // Fetch the main neomodels index page
+      const response = await fetch('https://neomodels.vercel.app/api/models', {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'bolt.diy/neomodels-integration',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(`Neomodels API returned ${response.status}, using fallback data`);
+        return this.createEmptyDatabase();
+      }
+
+      const data = await response.json();
+      return this.parseNeomodelsData(data, database);
+    } catch (error) {
+      console.error('Error fetching from neomodels API:', error);
+      return this.createEmptyDatabase();
+    }
+  }
+
+  /**
+   * Parse neomodels API response and populate database
+   */
+  private parseNeomodelsData(data: any, database: NeomodeelsDatabase): NeomodeelsDatabase {
+    // Expected format: { providers: [...], models: [...] }
+    const providers = data.providers || [];
+    const models = data.models || [];
+
+    // Process providers
+    for (const providerData of providers) {
+      const provider: NeoModelProvider = {
+        id: providerData.id || providerData.name.toLowerCase().replace(/\s+/g, '-'),
+        name: providerData.name,
+        category: providerData.category || 'direct',
+        website: providerData.website,
+        enabled: providerData.enabled !== false,
+        configurable: providerData.configurable || false,
+        requiredEnvVars: providerData.requiredEnvVars,
+        documentation: providerData.documentation,
+        models: [],
+      };
+      database.providers.set(provider.id, provider);
+    }
+
+    // Process models
+    for (const modelData of models) {
+      const model: NeoModel = {
+        id: modelData.id || modelData.name,
+        name: modelData.name,
+        provider: modelData.provider,
+        description: modelData.description,
+        capabilities: modelData.capabilities,
+        costPer1kInputTokens: modelData.costPer1kInputTokens,
+        costPer1kOutputTokens: modelData.costPer1kOutputTokens,
+        maxTokens: modelData.maxTokens,
+        releaseDate: modelData.releaseDate,
+        category: modelData.category,
+        isActive: modelData.isActive !== false,
+        modelType: modelData.modelType,
+        deprecated: modelData.deprecated || false,
+        tags: modelData.tags,
+        contextWindow: modelData.contextWindow,
+        trainingDataCutoff: modelData.trainingDataCutoff,
+      };
+
+      database.allModels.set(model.id, model);
+
+      // Associate with provider
+      const provider = database.providers.get(modelData.provider);
+      if (provider) {
+        provider.models.push(model);
+      }
+
+      // Index by category
+      if (model.category) {
+        if (!database.categories.has(model.category)) {
+          database.categories.set(model.category, []);
+        }
+        database.categories.get(model.category)!.push(model);
+      }
+    }
+
+    return database;
+  }
+
+  /**
+   * Create empty database structure
+   */
+  private createEmptyDatabase(): NeomodeelsDatabase {
+    return {
+      providers: new Map(),
+      allModels: new Map(),
+      categories: new Map(),
+      lastUpdated: Date.now(),
+      version: '1.0.0',
+    };
+  }
+
+  /**
+   * Search models with advanced filtering and sorting
+   */
+  async search(options: NeomodelsSearchOptions): Promise<NeomodelsSearchResult> {
+    await this.initialize();
+
+    if (!this.database) {
+      return { models: [], total: 0, hasMore: false, query: options };
+    }
+
+    let models = Array.from(this.database.allModels.values());
+
+    // Filter by provider
+    if (options.provider) {
+      models = models.filter(m => m.provider === options.provider);
+    }
+
+    // Filter by category
+    if (options.category) {
+      models = models.filter(m => m.category === options.category);
+    }
+
+    // Filter by query (search in name and description)
+    if (options.query) {
+      const query = options.query.toLowerCase();
+      models = models.filter(m =>
+        m.name.toLowerCase().includes(query) ||
+        m.description?.toLowerCase().includes(query) ||
+        m.provider.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter out deprecated models
+    models = models.filter(m => !m.deprecated && m.isActive !== false);
+
+    // Sort
+    const sortBy = options.sortBy || 'name';
+    models.sort((a, b) => {
+      let aVal: any, bVal: any;
+
+      switch (sortBy) {
+        case 'cost':
+          aVal = (a.costPer1kInputTokens || 0) + (a.costPer1kOutputTokens || 0);
+          bVal = (b.costPer1kInputTokens || 0) + (b.costPer1kOutputTokens || 0);
+          break;
+        case 'releaseDate':
+          aVal = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
+          bVal = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
+          break;
+        case 'contextWindow':
+          aVal = a.contextWindow || 0;
+          bVal = b.contextWindow || 0;
+          break;
+        default:
+          aVal = a.name;
+          bVal = b.name;
+      }
+
+      if (aVal < bVal) return options.sortOrder === 'desc' ? 1 : -1;
+      if (aVal > bVal) return options.sortOrder === 'desc' ? -1 : 1;
+      return 0;
+    });
+
+    // Pagination
+    const offset = options.offset || 0;
+    const limit = Math.min(options.limit || 50, 100); // Max 100 per request
+    const paginatedModels = models.slice(offset, offset + limit);
+
+    return {
+      models: paginatedModels,
+      total: models.length,
+      hasMore: offset + limit < models.length,
+      query: options,
+    };
+  }
+
+  /**
+   * Get all providers
+   */
+  async getProviders(): Promise<NeoModelProvider[]> {
+    await this.initialize();
+    return Array.from(this.database?.providers.values() || []);
+  }
+
+  /**
+   * Get provider by ID
+   */
+  async getProvider(providerId: string): Promise<NeoModelProvider | null> {
+    await this.initialize();
+    return this.database?.providers.get(providerId) || null;
+  }
+
+  /**
+   * Get model by ID
+   */
+  async getModel(modelId: string): Promise<NeoModel | null> {
+    await this.initialize();
+    return this.database?.allModels.get(modelId) || null;
+  }
+
+  /**
+   * Get models by category
+   */
+  async getModelsByCategory(category: NeoModel['category']): Promise<NeoModel[]> {
+    await this.initialize();
+    return this.database?.categories.get(category) || [];
+  }
+
+  /**
+   * Force refresh the database from neomodels
+   */
+  async refresh(): Promise<void> {
+    this.database = null;
+    this.isInitialized = false;
+    this.initPromise = null;
+    await this.initialize();
+  }
+
+  /**
+   * Load from cache
+   */
+  private loadFromCache(): NeomodeelsDatabase | null {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+
+      const cached = localStorage.getItem(this.cacheConfig.storageKey);
+      if (!cached) return null;
+
+      const parsed = JSON.parse(cached);
+
+      // Recreate Maps from parsed data
+      return {
+        providers: new Map(parsed.providers),
+        allModels: new Map(parsed.allModels),
+        categories: new Map(parsed.categories),
+        lastUpdated: parsed.lastUpdated,
+        version: parsed.version,
+      };
+    } catch (error) {
+      console.error('Error loading neomodels cache:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save to cache
+   */
+  private saveToCache(database: NeomodeelsDatabase): void {
+    try {
+      if (typeof localStorage === 'undefined') return;
+
+      const data = {
+        providers: Array.from(database.providers.entries()),
+        allModels: Array.from(database.allModels.entries()),
+        categories: Array.from(database.categories.entries()),
+        lastUpdated: database.lastUpdated,
+        version: database.version,
+      };
+
+      localStorage.setItem(this.cacheConfig.storageKey, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error saving neomodels cache:', error);
+    }
+  }
+
+  /**
+   * Check if cache is expired
+   */
+  private isCacheExpired(database: NeomodeelsDatabase): boolean {
+    const age = Date.now() - database.lastUpdated;
+    return age > this.cacheConfig.ttl;
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats() {
+    return {
+      isInitialized: this.isInitialized,
+      modelsCount: this.database?.allModels.size || 0,
+      providersCount: this.database?.providers.size || 0,
+      lastUpdated: this.database?.lastUpdated || null,
+      cacheExpiry: this.database ? this.database.lastUpdated + this.cacheConfig.ttl : null,
+    };
+  }
+}
+
+// Singleton instance
+let instance: NeomodelsDatabase | null = null;
+
+export function getNeomodelsDatabase(): NeomodelsDatabase {
+  if (!instance) {
+    instance = new NeomodelsDatabase();
+  }
+  return instance;
+}
+
+export { NeomodelsDatabase };
