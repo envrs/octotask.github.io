@@ -34,7 +34,7 @@ export default class NeomodelsProvider extends BaseProvider {
     },
   ];
 
-  private dynamicModelsCache?: {
+  private _dynamicModelsCache?: {
     cacheId: string;
     models: ModelInfo[];
   };
@@ -43,9 +43,9 @@ export default class NeomodelsProvider extends BaseProvider {
    * Get dynamic models from neomodels database
    */
   async getDynamicModels(
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): Promise<ModelInfo[]> {
     try {
       const db = getNeomodelsDatabase();
@@ -57,8 +57,8 @@ export default class NeomodelsProvider extends BaseProvider {
       });
 
       const models: ModelInfo[] = searchResult.models
-        .filter(model => model.isActive && !model.deprecated)
-        .map(model => ({
+        .filter((model) => model.isActive && !model.deprecated)
+        .map((model) => ({
           name: model.id,
           label: `${model.name} (${model.provider})`,
           provider: 'Neomodels',
@@ -81,40 +81,34 @@ export default class NeomodelsProvider extends BaseProvider {
   }
 
   /**
-   * Get language model for neomodels
+   * Get model instance for neomodels
    * Routes to appropriate provider based on model ID
    */
-  async getLanguageModel(options: {
+  getModelInstance(options: {
     model: string;
+    serverEnv: Env;
     apiKeys?: Record<string, string>;
-    settings?: IProviderSetting;
-    serverEnv?: Record<string, string>;
-  }): Promise<LanguageModelV1 | null> {
-    const { model, apiKeys, settings, serverEnv } = options;
+    providerSettings?: Record<string, IProviderSetting>;
+  }): LanguageModelV1 {
+    const { model, apiKeys, providerSettings } = options;
 
-    try {
-      const db = getNeomodelsDatabase();
-      await db.initialize();
+    // For neomodels, we route based on model prefix or use a default
+    const parts = model.split('/');
+    const providerPrefix = parts[0]?.toLowerCase() || '';
 
-      // Get model details
-      const modelDetails = await db.getModel(model);
-      if (!modelDetails) {
-        console.error(`Model ${model} not found in neomodels database`);
-        return null;
-      }
+    const result = this._routeToProvider(providerPrefix, model, apiKeys, providerSettings?.[this.name], undefined);
 
-      // Route to appropriate provider
-      return this.routeToProvider(modelDetails.provider, model, apiKeys, settings, serverEnv);
-    } catch (error) {
-      console.error('Error routing neomodels request:', error);
-      return null;
+    if (!result) {
+      throw new Error(`Could not create model instance for ${model}`);
     }
+
+    return result;
   }
 
   /**
    * Route model request to the appropriate backend provider
    */
-  private routeToProvider(
+  private _routeToProvider(
     provider: string,
     model: string,
     apiKeys?: Record<string, string>,
@@ -125,58 +119,58 @@ export default class NeomodelsProvider extends BaseProvider {
 
     switch (normalizedProvider) {
       case 'openai':
-        return this.createOpenAIModel(model, apiKeys, settings, serverEnv);
+        return this._createOpenAIModel(model, apiKeys, settings, serverEnv);
       case 'anthropic':
-        return this.createAnthropicModel(model, apiKeys, settings, serverEnv);
+        return this._createAnthropicModel(model, apiKeys, settings, serverEnv);
       case 'google':
       case 'gemini':
-        return this.createGoogleModel(model, apiKeys, settings, serverEnv);
+        return this._createGoogleModel(model, apiKeys, settings, serverEnv);
       case 'cohere':
-        return this.createCohereModel(model, apiKeys, settings, serverEnv);
+        return this._createCohereModel(model, apiKeys, settings, serverEnv);
       case 'meta':
       case 'llama':
-        return this.createMetaModel(model, apiKeys, settings, serverEnv);
+        return this._createMetaModel(model, apiKeys, settings, serverEnv);
       case 'mistral':
-        return this.createMistralModel(model, apiKeys, settings, serverEnv);
+        return this._createMistralModel(model, apiKeys, settings, serverEnv);
       case 'xai':
       case 'grok':
-        return this.createXAIModel(model, apiKeys, settings, serverEnv);
+        return this._createXAIModel(model, apiKeys, settings, serverEnv);
       case 'groq':
-        return this.createGroqModel(model, apiKeys, settings, serverEnv);
+        return this._createGroqModel(model, apiKeys, settings, serverEnv);
       case 'aws':
       case 'bedrock':
-        return this.createAWSModel(model, apiKeys, settings, serverEnv);
+        return this._createAWSModel(model, apiKeys, settings, serverEnv);
       case 'together':
-        return this.createTogetherModel(model, apiKeys, settings, serverEnv);
+        return this._createTogetherModel(model, apiKeys, settings, serverEnv);
       case 'perplexity':
-        return this.createPerplexityModel(model, apiKeys, settings, serverEnv);
+        return this._createPerplexityModel(model, apiKeys, settings, serverEnv);
       case 'huggingface':
-        return this.createHuggingFaceModel(model, apiKeys, settings, serverEnv);
+        return this._createHuggingFaceModel(model, apiKeys, settings, serverEnv);
       case 'replicate':
-        return this.createReplicateModel(model, apiKeys, settings, serverEnv);
+        return this._createReplicateModel(model, apiKeys, settings, serverEnv);
       case 'stabilityai':
-        return this.createStabilityAIModel(model, apiKeys, settings, serverEnv);
+        return this._createStabilityAIModel(model, apiKeys, settings, serverEnv);
       case 'cerebras':
-        return this.createCerebrasModel(model, apiKeys, settings, serverEnv);
+        return this._createCerebrasModel(model, apiKeys, settings, serverEnv);
       case 'deepinfra':
-        return this.createDeepInfraModel(model, apiKeys, settings, serverEnv);
+        return this._createDeepInfraModel(model, apiKeys, settings, serverEnv);
       case 'fireworks':
-        return this.createFireworksModel(model, apiKeys, settings, serverEnv);
+        return this._createFireworksModel(model, apiKeys, settings, serverEnv);
       case 'nvidia':
-        return this.createNvidiaModel(model, apiKeys, settings, serverEnv);
+        return this._createNvidiaModel(model, apiKeys, settings, serverEnv);
       case '302ai':
       case '302':
-        return this.createAggregatorModel('302.AI', model, apiKeys, settings, serverEnv);
+        return this._createAggregatorModel('302.AI', model, apiKeys, settings, serverEnv);
       case 'abacusai':
       case 'abacus':
-        return this.createAggregatorModel('Abacus AI', model, apiKeys, settings, serverEnv);
+        return this._createAggregatorModel('Abacus AI', model, apiKeys, settings, serverEnv);
       case 'aiHubMix':
       case 'aihmix':
-        return this.createAggregatorModel('AIHubMix', model, apiKeys, settings, serverEnv);
+        return this._createAggregatorModel('AIHubMix', model, apiKeys, settings, serverEnv);
       case 'aliyundashscope':
       case 'dashscope':
       case 'alibaba':
-        return this.createAggregatorModel('Alibaba DashScope', model, apiKeys, settings, serverEnv);
+        return this._createAggregatorModel('Alibaba DashScope', model, apiKeys, settings, serverEnv);
       default:
         console.warn(`Unknown provider: ${provider}`);
         return null;
@@ -186,7 +180,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create OpenAI model
    */
-  private createOpenAIModel(
+  private _createOpenAIModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -216,7 +210,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Anthropic model
    */
-  private createAnthropicModel(
+  private _createAnthropicModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -245,7 +239,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Google model
    */
-  private createGoogleModel(
+  private _createGoogleModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -274,7 +268,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Cohere model
    */
-  private createCohereModel(
+  private _createCohereModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -303,11 +297,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Meta/Llama model (stub - requires compatible endpoint)
    */
-  private createMetaModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createMetaModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     // Meta models are typically accessed through aggregators or compatible endpoints
     console.warn('Meta models should be accessed through a compatible provider');
@@ -317,7 +311,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Mistral model (stub - requires compatible endpoint)
    */
-  private createMistralModel(
+  private _createMistralModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -348,11 +342,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create xAI/Grok model (stub - requires compatible endpoint)
    */
-  private createXAIModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createXAIModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('xAI models require additional configuration');
     return null;
@@ -361,11 +355,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Groq model (stub - requires compatible endpoint)
    */
-  private createGroqModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createGroqModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Groq models require additional configuration');
     return null;
@@ -374,11 +368,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create AWS/Bedrock model (stub)
    */
-  private createAWSModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createAWSModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('AWS Bedrock models require additional configuration');
     return null;
@@ -387,11 +381,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Together model (stub)
    */
-  private createTogetherModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createTogetherModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Together AI models require additional configuration');
     return null;
@@ -400,7 +394,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Perplexity model (stub - OpenAI compatible)
    */
-  private createPerplexityModel(
+  private _createPerplexityModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -430,11 +424,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create HuggingFace model (stub)
    */
-  private createHuggingFaceModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createHuggingFaceModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('HuggingFace models require additional configuration');
     return null;
@@ -443,11 +437,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Replicate model (stub)
    */
-  private createReplicateModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createReplicateModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Replicate models require additional configuration');
     return null;
@@ -456,11 +450,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Stability AI model (stub)
    */
-  private createStabilityAIModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createStabilityAIModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Stability AI models require additional configuration');
     return null;
@@ -469,7 +463,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Cerebras model (stub - OpenAI compatible)
    */
-  private createCerebrasModel(
+  private _createCerebrasModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -499,7 +493,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Deep Infra model (stub - OpenAI compatible)
    */
-  private createDeepInfraModel(
+  private _createDeepInfraModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -529,7 +523,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create Fireworks model (stub - OpenAI compatible)
    */
-  private createFireworksModel(
+  private _createFireworksModel(
     model: string,
     apiKeys?: Record<string, string>,
     settings?: IProviderSetting,
@@ -559,11 +553,11 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create NVIDIA model (stub)
    */
-  private createNvidiaModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+  private _createNvidiaModel(
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('NVIDIA models require additional configuration');
     return null;
@@ -572,7 +566,7 @@ export default class NeomodelsProvider extends BaseProvider {
   /**
    * Create aggregator model (302.AI, Abacus, etc.)
    */
-  private createAggregatorModel(
+  private _createAggregatorModel(
     aggregator: string,
     model: string,
     apiKeys?: Record<string, string>,
@@ -582,7 +576,7 @@ export default class NeomodelsProvider extends BaseProvider {
     const keyMap: Record<string, string> = {
       '302.AI': 'NEOMODELS_302AI_API_KEY',
       'Abacus AI': 'NEOMODELS_ABACUSAI_API_KEY',
-      'AIHubMix': 'NEOMODELS_AIHMIX_API_KEY',
+      AIHubMix: 'NEOMODELS_AIHMIX_API_KEY',
       'Alibaba DashScope': 'NEOMODELS_DASHSCOPE_API_KEY',
     };
 

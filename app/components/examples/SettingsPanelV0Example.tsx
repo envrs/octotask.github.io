@@ -1,9 +1,9 @@
 /**
  * Example Settings Panel Component - v0 Design
- * 
+ *
  * This is an example of how to modernize existing components
  * to use the v0 design system.
- * 
+ *
  * This component demonstrates:
  * - Using v0 Card components
  * - Using v0 Button variants
@@ -13,9 +13,9 @@
  */
 
 import React, { useState } from 'react';
-import { V0Button } from '../v0/Button';
-import { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription } from '../v0/Card';
-import { Input } from '../v0/Input';
+import { V0Button } from '~/components/v0/Button';
+import { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription } from '~/components/v0/Card';
+import { Input } from '~/components/v0/Input';
 
 interface SettingsPanelV0ExampleProps {
   onSave?: (settings: Record<string, any>) => void;
@@ -34,6 +34,7 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
@@ -43,9 +44,11 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
   const handleSave = async () => {
     // Validate
     const newErrors: Record<string, string> = {};
+
     if (!formData.apiKey) {
       newErrors.apiKey = 'API key is required';
     }
+
     if (!formData.modelName) {
       newErrors.modelName = 'Model name is required';
     }
@@ -56,10 +59,12 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
     }
 
     setIsLoading(true);
+
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       onSave?.(formData);
+
       // Show success toast here
     } finally {
       setIsLoading(false);
@@ -98,12 +103,8 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
 
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-900 dark:text-white">
-                Temperature
-              </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Higher = more creative (0.0 - 2.0)
-              </p>
+              <label className="text-sm font-medium text-gray-900 dark:text-white">Temperature</label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Higher = more creative (0.0 - 2.0)</p>
             </div>
             <input
               type="range"
@@ -126,21 +127,18 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
               onChange={(e) => handleChange('notifications', e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
             />
-            <span className="text-sm text-gray-900 dark:text-white">
-              Enable notifications for long-running tasks
-            </span>
+            <span className="text-sm text-gray-900 dark:text-white">Enable notifications for long-running tasks</span>
           </label>
         </CardBody>
 
         <CardFooter>
-          <V0Button variant="ghost" onClick={() => setFormData({ apiKey: '', modelName: '', temperature: 0.7, notifications: true })}>
+          <V0Button
+            variant="ghost"
+            onClick={() => setFormData({ apiKey: '', modelName: '', temperature: 0.7, notifications: true })}
+          >
             Reset
           </V0Button>
-          <V0Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={isLoading}
-          >
+          <V0Button variant="primary" onClick={handleSave} disabled={isLoading}>
             {isLoading ? 'Saving...' : 'Save Settings'}
           </V0Button>
         </CardFooter>
@@ -169,9 +167,7 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
             <CardTitle className="text-base">Integrations</CardTitle>
           </CardHeader>
           <CardBody>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Connect with third-party services and tools
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Connect with third-party services and tools</p>
             <V0Button variant="secondary" size="sm" className="w-full">
               Manage Integrations
             </V0Button>
@@ -183,7 +179,8 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
       <Card variant="outline" className="border-accent-500 bg-accent-50/50 dark:bg-accent-950/20">
         <CardBody className="py-3">
           <p className="text-sm text-gray-900 dark:text-white">
-            <span className="font-semibold">Tip:</span> Settings are automatically saved to your profile and synced across all devices.
+            <span className="font-semibold">Tip:</span> Settings are automatically saved to your profile and synced
+            across all devices.
           </p>
         </CardBody>
       </Card>
@@ -193,26 +190,26 @@ export function SettingsPanelV0Example({ onSave }: SettingsPanelV0ExampleProps) 
 
 /**
  * Example of how to modernize existing components:
- * 
+ *
  * 1. Replace component imports:
  *    OLD: import { Button } from '~/components/ui/Button';
  *    NEW: import { V0Button } from '~/components/v0';
- * 
+ *
  * 2. Update component usage:
  *    OLD: <Button variant="default">Click</Button>
  *    NEW: <V0Button variant="primary">Click</V0Button>
- * 
+ *
  * 3. Use v0 Card system instead of custom div containers:
  *    OLD: <div className="border p-4">Content</div>
  *    NEW: <Card><CardBody>Content</CardBody></Card>
- * 
+ *
  * 4. Use v0 Input for form fields:
  *    OLD: <input className="..." />
  *    NEW: <Input label="..." error={error} />
- * 
+ *
  * 5. Leverage responsive helpers:
  *    className="grid grid-cols-1 md:grid-cols-2 gap-4"
- * 
+ *
  * Benefits:
  * - Consistent design language across the app
  * - Automatic dark mode support

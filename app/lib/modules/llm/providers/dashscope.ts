@@ -96,7 +96,7 @@ export default class AlibabaDAshScopeProvider extends BaseProvider {
         return this.staticModels;
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { data?: Array<{ id: string }> };
       const models: ModelInfo[] = (data.data || []).map((model: any) => ({
         name: model.id,
         label: model.id,
@@ -112,25 +112,24 @@ export default class AlibabaDAshScopeProvider extends BaseProvider {
     }
   }
 
-  async getLanguageModel(options: {
+  getModelInstance(options: {
     model: string;
+    serverEnv: Env;
     apiKeys?: Record<string, string>;
-    settings?: IProviderSetting;
-    serverEnv?: Record<string, string>;
-  }): Promise<LanguageModelV1 | null> {
-    const { model, apiKeys, settings, serverEnv } = options;
+    providerSettings?: Record<string, IProviderSetting>;
+  }): LanguageModelV1 {
+    const { model, serverEnv, apiKeys, providerSettings } = options;
 
     const { apiKey, baseUrl } = this.getProviderBaseUrlAndKey({
       apiKeys,
-      providerSettings: settings,
-      serverEnv,
-      defaultBaseUrlKey: 'NEOMODELS_DASHSCOPE_BASE_URL',
+      providerSettings: providerSettings?.[this.name],
+      serverEnv: serverEnv as any,
+      defaultBaseUrlKey: '',
       defaultApiTokenKey: 'NEOMODELS_DASHSCOPE_API_KEY',
     });
 
     if (!apiKey) {
-      console.warn('DashScope API key not configured');
-      return null;
+      throw new Error(`Missing API key for ${this.name} provider`);
     }
 
     const client = createOpenAI({
