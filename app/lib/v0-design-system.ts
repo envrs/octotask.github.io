@@ -2,7 +2,7 @@
  * v0 Design System Integration
  *
  * This module provides design tokens and utilities that map v0's design system
- * to the existing Bolt UnoCSS-based styling system.
+ * to the existing Octotask UnoCSS-based styling system.
  *
  * v0 uses a clean, minimal design language with:
  * - 4-5 core colors (primary, secondary, success, danger, warning)
@@ -132,14 +132,14 @@ export const v0ComponentVariants = {
   // Card variants
   card: {
     default: {
-      bg: 'bg-bolt-elements-background-depth-1',
-      border: 'border border-bolt-elements-borderColor',
+      bg: 'bg-octotask-elements-background-depth-1',
+      border: 'border border-octotask-elements-borderColor',
       padding: 'p-4',
       rounded: 'rounded-lg',
     },
     elevated: {
-      bg: 'bg-bolt-elements-background-depth-2',
-      border: 'border border-bolt-elements-borderColorActive',
+      bg: 'bg-octotask-elements-background-depth-2',
+      border: 'border border-octotask-elements-borderColorActive',
       padding: 'p-6',
       rounded: 'rounded-lg',
       shadow: 'shadow-lg',
@@ -149,12 +149,12 @@ export const v0ComponentVariants = {
   // Input variants
   input: {
     default: {
-      border: 'border border-bolt-elements-borderColor',
+      border: 'border border-octotask-elements-borderColor',
       focus: 'focus:ring-2 focus:ring-accent-500 focus:border-transparent',
       padding: 'px-3 py-2',
       rounded: 'rounded-md',
-      bg: 'bg-bolt-elements-background',
-      text: 'text-bolt-elements-textPrimary',
+      bg: 'bg-octotask-elements-background',
+      text: 'text-octotask-elements-textPrimary',
     },
   },
 };

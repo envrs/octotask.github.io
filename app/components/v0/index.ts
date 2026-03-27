@@ -2,7 +2,7 @@
  * v0 Design System Components
  *
  * This directory contains React components that implement v0's design language.
- * They work seamlessly with the existing Bolt UnoCSS styling system.
+ * They work seamlessly with the existing Octotask UnoCSS styling system.
  *
  * All components follow these principles:
  * - Clean, minimal aesthetic
