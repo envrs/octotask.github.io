@@ -13,9 +13,9 @@
  */
 
 import React, { useState } from 'react';
-import { V0Button } from '../v0/Button';
-import { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription } from '../v0/Card';
-import { Input } from '../v0/Input';
+import { V0Button } from '~/components/v0/Button';
+import { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription } from '~/components/v0/Card';
+import { Input } from '~/components/v0/Input';
 
 interface SettingsPanelV0ExampleProps {
   onSave?: (settings: Record<string, any>) => void;

@@ -33,4 +33,4 @@ export {
   v0Classes,
   v0Responsive,
   v0MergeClasses,
-} from '../../lib/v0-design-system';
+} from '~/lib/v0-design-system';

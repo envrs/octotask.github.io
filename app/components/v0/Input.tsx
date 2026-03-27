@@ -30,7 +30,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={classNames(
-            // Base styles
             'relative w-full appearance-none rounded-md border bg-white px-3 py-2 text-sm',
             'transition-all duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]',
             'placeholder:text-gray-400 dark:placeholder:text-gray-600',
@@ -101,7 +100,6 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
 
         <textarea
           className={classNames(
-            // Base styles
             'relative w-full appearance-none rounded-md border bg-white px-3 py-2 text-sm',
             'transition-all duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]',
             'placeholder:text-gray-400 dark:placeholder:text-gray-600',

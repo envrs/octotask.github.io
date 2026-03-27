@@ -21,60 +21,62 @@ const DEFAULT_CACHE_CONFIG: NeomodelsCacheConfig = {
 };
 
 class NeomodelsDatabase {
-  private database: NeomodeelsDatabase | null = null;
-  private cacheConfig: NeomodelsCacheConfig;
-  private isInitialized = false;
-  private initPromise: Promise<void> | null = null;
+  private _database: NeomodeelsDatabase | null = null;
+  private _cacheConfig: NeomodelsCacheConfig;
+  private _isInitialized = false;
+  private _initPromise: Promise<void> | null = null;
 
   constructor(cacheConfig?: Partial<NeomodelsCacheConfig>) {
-    this.cacheConfig = { ...DEFAULT_CACHE_CONFIG, ...cacheConfig };
+    this._cacheConfig = { ...DEFAULT_CACHE_CONFIG, ...cacheConfig };
   }
 
   /**
    * Initialize the database, either from cache or by fetching fresh data
    */
   async initialize(): Promise<void> {
-    if (this.isInitialized) {
+    if (this._isInitialized) {
       return;
     }
 
-    if (this.initPromise) {
-      return this.initPromise;
+    if (this._initPromise) {
+      await this._initPromise;
+
+      return;
     }
 
-    this.initPromise = this.performInitialization();
-    await this.initPromise;
+    this._initPromise = this._performInitialization();
+    await this._initPromise;
   }
 
-  private async performInitialization(): Promise<void> {
+  private async _performInitialization(): Promise<void> {
     try {
       // Try to load from cache first
-      const cached = this.loadFromCache();
+      const cached = this._loadFromCache();
 
-      if (cached && !this.isCacheExpired(cached)) {
-        this.database = cached;
-        this.isInitialized = true;
+      if (cached && !this._isCacheExpired(cached)) {
+        this._database = cached;
+        this._isInitialized = true;
 
         return;
       }
 
       // Fetch fresh data from neomodels API
-      this.database = await this.fetchFromNeomodels();
-      this.saveToCache(this.database);
-      this.isInitialized = true;
+      this._database = await this._fetchFromNeomodels();
+      this._saveToCache(this._database);
+      this._isInitialized = true;
     } catch (error) {
       console.error('Failed to initialize neomodels database:', error);
 
       // Fallback to empty database
-      this.database = this.createEmptyDatabase();
-      this.isInitialized = true;
+      this._database = this._createEmptyDatabase();
+      this._isInitialized = true;
     }
   }
 
   /**
    * Fetch all models from neomodels.vercel.app
    */
-  private async fetchFromNeomodels(): Promise<NeomodeelsDatabase> {
+  private async _fetchFromNeomodels(): Promise<NeomodeelsDatabase> {
     const database: NeomodeelsDatabase = {
       providers: new Map(),
       allModels: new Map(),
@@ -94,22 +96,22 @@ class NeomodelsDatabase {
 
       if (!response.ok) {
         console.warn(`Neomodels API returned ${response.status}, using fallback data`);
-        return this.createEmptyDatabase();
+        return this._createEmptyDatabase();
       }
 
       const data = await response.json();
 
-      return this.parseNeomodelsData(data, database);
+      return this._parseNeomodelsData(data, database);
     } catch (error) {
       console.error('Error fetching from neomodels API:', error);
-      return this.createEmptyDatabase();
+      return this._createEmptyDatabase();
     }
   }
 
   /**
    * Parse neomodels API response and populate database
    */
-  private parseNeomodelsData(data: any, database: NeomodeelsDatabase): NeomodeelsDatabase {
+  private _parseNeomodelsData(data: any, database: NeomodeelsDatabase): NeomodeelsDatabase {
     // Expected format: { providers: [...], models: [...] }
     const providers = data.providers || [];
     const models = data.models || [];
@@ -176,7 +178,7 @@ class NeomodelsDatabase {
   /**
    * Create empty database structure
    */
-  private createEmptyDatabase(): NeomodeelsDatabase {
+  private _createEmptyDatabase(): NeomodeelsDatabase {
     return {
       providers: new Map(),
       allModels: new Map(),
@@ -192,11 +194,11 @@ class NeomodelsDatabase {
   async search(options: NeomodelsSearchOptions): Promise<NeomodelsSearchResult> {
     await this.initialize();
 
-    if (!this.database) {
+    if (!this._database) {
       return { models: [], total: 0, hasMore: false, query: options };
     }
 
-    let models = Array.from(this.database.allModels.values());
+    let models = Array.from(this._database.allModels.values());
 
     // Filter by provider
     if (options.provider) {
@@ -274,7 +276,7 @@ class NeomodelsDatabase {
    */
   async getProviders(): Promise<NeoModelProvider[]> {
     await this.initialize();
-    return Array.from(this.database?.providers.values() || []);
+    return Array.from(this._database?.providers.values() || []);
   }
 
   /**
@@ -282,7 +284,7 @@ class NeomodelsDatabase {
    */
   async getProvider(providerId: string): Promise<NeoModelProvider | null> {
     await this.initialize();
-    return this.database?.providers.get(providerId) || null;
+    return this._database?.providers.get(providerId) || null;
   }
 
   /**
@@ -290,7 +292,7 @@ class NeomodelsDatabase {
    */
   async getModel(modelId: string): Promise<NeoModel | null> {
     await this.initialize();
-    return this.database?.allModels.get(modelId) || null;
+    return this._database?.allModels.get(modelId) || null;
   }
 
   /**
@@ -303,29 +305,29 @@ class NeomodelsDatabase {
       return [];
     }
 
-    return this.database?.categories.get(category) || [];
+    return this._database?.categories.get(category) || [];
   }
 
   /**
    * Force refresh the database from neomodels
    */
   async refresh(): Promise<void> {
-    this.database = null;
-    this.isInitialized = false;
-    this.initPromise = null;
+    this._database = null;
+    this._isInitialized = false;
+    this._initPromise = null;
     await this.initialize();
   }
 
   /**
    * Load from cache
    */
-  private loadFromCache(): NeomodeelsDatabase | null {
+  private _loadFromCache(): NeomodeelsDatabase | null {
     try {
       if (typeof localStorage === 'undefined') {
         return null;
       }
 
-      const cached = localStorage.getItem(this.cacheConfig.storageKey);
+      const cached = localStorage.getItem(this._cacheConfig.storageKey);
 
       if (!cached) {
         return null;
@@ -350,7 +352,7 @@ class NeomodelsDatabase {
   /**
    * Save to cache
    */
-  private saveToCache(database: NeomodeelsDatabase): void {
+  private _saveToCache(database: NeomodeelsDatabase): void {
     try {
       if (typeof localStorage === 'undefined') {
         return;
@@ -364,7 +366,7 @@ class NeomodelsDatabase {
         version: database.version,
       };
 
-      localStorage.setItem(this.cacheConfig.storageKey, JSON.stringify(data));
+      localStorage.setItem(this._cacheConfig.storageKey, JSON.stringify(data));
     } catch (error) {
       console.error('Error saving neomodels cache:', error);
     }
@@ -373,9 +375,9 @@ class NeomodelsDatabase {
   /**
    * Check if cache is expired
    */
-  private isCacheExpired(database: NeomodeelsDatabase): boolean {
+  private _isCacheExpired(database: NeomodeelsDatabase): boolean {
     const age = Date.now() - database.lastUpdated;
-    return age > this.cacheConfig.ttl;
+    return age > this._cacheConfig.ttl;
   }
 
   /**
@@ -383,11 +385,11 @@ class NeomodelsDatabase {
    */
   getCacheStats() {
     return {
-      isInitialized: this.isInitialized,
-      modelsCount: this.database?.allModels.size || 0,
-      providersCount: this.database?.providers.size || 0,
-      lastUpdated: this.database?.lastUpdated || null,
-      cacheExpiry: this.database ? this.database.lastUpdated + this.cacheConfig.ttl : null,
+      isInitialized: this._isInitialized,
+      modelsCount: this._database?.allModels.size || 0,
+      providersCount: this._database?.providers.size || 0,
+      lastUpdated: this._database?.lastUpdated || null,
+      cacheExpiry: this._database ? this._database.lastUpdated + this._cacheConfig.ttl : null,
     };
   }
 }
