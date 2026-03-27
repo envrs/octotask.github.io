@@ -5,7 +5,7 @@
 
 import { json } from '@remix-run/node';
 import { getNeomodelsDatabase } from '~/lib/neomodels';
-import type { NeomodelsSearchResult, NeoModel } from '~/lib/neomodels';
+import type { NeoModel } from '~/lib/neomodels';
 
 interface NeomodelsResponse {
   success: boolean;
@@ -20,11 +20,7 @@ interface NeomodelsResponse {
   };
 }
 
-export async function loader({
-  request,
-}: {
-  request: Request;
-}): Promise<Response> {
+export async function loader({ request }: { request: Request }): Promise<Response> {
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || 'search';
@@ -62,7 +58,7 @@ export async function loader({
         return json<NeomodelsResponse>({
           success: true,
           data: {
-            providers: providers.map(p => ({
+            providers: providers.map((p) => ({
               id: p.id,
               name: p.name,
               category: p.category,
@@ -77,19 +73,27 @@ export async function loader({
 
       case 'model': {
         const modelId = url.searchParams.get('id');
+
         if (!modelId) {
-          return json<NeomodelsResponse>({
-            success: false,
-            error: 'Model ID is required',
-          }, { status: 400 });
+          return json<NeomodelsResponse>(
+            {
+              success: false,
+              error: 'Model ID is required',
+            },
+            { status: 400 },
+          );
         }
 
         const model = await db.getModel(modelId);
+
         if (!model) {
-          return json<NeomodelsResponse>({
-            success: false,
-            error: 'Model not found',
-          }, { status: 404 });
+          return json<NeomodelsResponse>(
+            {
+              success: false,
+              error: 'Model not found',
+            },
+            { status: 404 },
+          );
         }
 
         return json<NeomodelsResponse>({
@@ -133,16 +137,22 @@ export async function loader({
       }
 
       default:
-        return json<NeomodelsResponse>({
-          success: false,
-          error: `Unknown action: ${action}`,
-        }, { status: 400 });
+        return json<NeomodelsResponse>(
+          {
+            success: false,
+            error: `Unknown action: ${action}`,
+          },
+          { status: 400 },
+        );
     }
   } catch (error) {
     console.error('Neomodels API error:', error);
-    return json<NeomodelsResponse>({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-    }, { status: 500 });
+    return json<NeomodelsResponse>(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
+      { status: 500 },
+    );
   }
 }

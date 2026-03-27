@@ -82,7 +82,9 @@ export default class AbacusAIProvider extends BaseProvider {
         return this.staticModels;
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        models?: Array<{ id: string; name?: string; contextWindow?: number; maxTokens?: number }>;
+      };
       const models: ModelInfo[] = (data.models || []).map((model: any) => ({
         name: model.id,
         label: model.name || model.id,
@@ -98,25 +100,24 @@ export default class AbacusAIProvider extends BaseProvider {
     }
   }
 
-  async getLanguageModel(options: {
+  getModelInstance(options: {
     model: string;
+    serverEnv: Env;
     apiKeys?: Record<string, string>;
-    settings?: IProviderSetting;
-    serverEnv?: Record<string, string>;
-  }): Promise<LanguageModelV1 | null> {
-    const { model, apiKeys, settings, serverEnv } = options;
+    providerSettings?: Record<string, IProviderSetting>;
+  }): LanguageModelV1 {
+    const { model, serverEnv, apiKeys, providerSettings } = options;
 
     const { apiKey, baseUrl } = this.getProviderBaseUrlAndKey({
       apiKeys,
-      providerSettings: settings,
-      serverEnv,
-      defaultBaseUrlKey: 'NEOMODELS_ABACUSAI_BASE_URL',
+      providerSettings: providerSettings?.[this.name],
+      serverEnv: serverEnv as any,
+      defaultBaseUrlKey: '',
       defaultApiTokenKey: 'NEOMODELS_ABACUSAI_API_KEY',
     });
 
     if (!apiKey) {
-      console.warn('Abacus AI API key not configured');
-      return null;
+      throw new Error(`Missing API key for ${this.name} provider`);
     }
 
     const client = createOpenAI({

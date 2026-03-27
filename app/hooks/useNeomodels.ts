@@ -6,6 +6,12 @@
 import { useCallback, useState, useEffect } from 'react';
 import type { NeoModel, NeomodelsSearchOptions, NeomodelsSearchResult } from '~/lib/neomodels';
 
+interface ApiResponse<T = any> {
+  success: boolean;
+  error?: string;
+  data: T;
+}
+
 interface UseNeomodelsOptions {
   autoLoad?: boolean;
   cacheTime?: number; // milliseconds
@@ -28,7 +34,7 @@ interface UseNeomodelsReturn {
 
 const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
 
-let searchCache = new Map<string, { data: NeomodelsSearchResult; timestamp: number }>();
+const searchCache = new Map<string, { data: NeomodelsSearchResult; timestamp: number }>();
 let providersCache: { data: any[]; timestamp: number } | null = null;
 
 function getCacheKey(options: NeomodelsSearchOptions): string {
@@ -57,70 +63,82 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
   /**
    * Search models with caching
    */
-  const search = useCallback(async (options: NeomodelsSearchOptions): Promise<NeomodelsSearchResult> => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const search = useCallback(
+    async (options: NeomodelsSearchOptions): Promise<NeomodelsSearchResult> => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      const cacheKey = getCacheKey(options);
-      const cached = searchCache.get(cacheKey);
+        const cacheKey = getCacheKey(options);
+        const cached = searchCache.get(cacheKey);
 
-      if (cached && Date.now() - cached.timestamp < cacheTime) {
-        setModels(cached.data.models);
-        setTotal(cached.data.total);
-        setHasMore(cached.data.hasMore);
+        if (cached && Date.now() - cached.timestamp < cacheTime) {
+          setModels(cached.data.models);
+          setTotal(cached.data.total);
+          setHasMore(cached.data.hasMore);
+          setIsLoading(false);
+
+          return cached.data;
+        }
+
+        const params = new URLSearchParams();
+        params.set('action', 'search');
+
+        if (options.query) {
+          params.set('q', options.query);
+        }
+
+        if (options.provider) {
+          params.set('provider', options.provider);
+        }
+
+        if (options.category) {
+          params.set('category', options.category);
+        }
+
+        params.set('sortBy', options.sortBy || 'name');
+        params.set('sortOrder', options.sortOrder || 'asc');
+        params.set('limit', String(options.limit || 50));
+        params.set('offset', String(options.offset || 0));
+
+        const response = await fetch(`/api/neomodels?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const json = (await response.json()) as ApiResponse<NeomodelsSearchResult>;
+
+        if (!json.success) {
+          throw new Error(json.error || 'Unknown error');
+        }
+
+        const result = json.data;
+
+        // Cache the result
+        searchCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+        // Keep max 50 cache entries to avoid memory leak
+        if (searchCache.size > 50) {
+          const oldestKey = Array.from(searchCache.entries()).sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
+          searchCache.delete(oldestKey);
+        }
+
+        setModels(result.models);
+        setTotal(result.total);
+        setHasMore(result.hasMore);
         setIsLoading(false);
-        return cached.data;
+
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        setIsLoading(false);
+        throw error;
       }
-
-      const params = new URLSearchParams();
-      params.set('action', 'search');
-      if (options.query) params.set('q', options.query);
-      if (options.provider) params.set('provider', options.provider);
-      if (options.category) params.set('category', options.category);
-      params.set('sortBy', options.sortBy || 'name');
-      params.set('sortOrder', options.sortOrder || 'asc');
-      params.set('limit', String(options.limit || 50));
-      params.set('offset', String(options.offset || 0));
-
-      const response = await fetch(`/api/neomodels?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const json = await response.json();
-
-      if (!json.success) {
-        throw new Error(json.error || 'Unknown error');
-      }
-
-      const result = json.data as NeomodelsSearchResult;
-
-      // Cache the result
-      searchCache.set(cacheKey, { data: result, timestamp: Date.now() });
-
-      // Keep max 50 cache entries to avoid memory leak
-      if (searchCache.size > 50) {
-        const oldestKey = Array.from(searchCache.entries()).sort(
-          (a, b) => a[1].timestamp - b[1].timestamp
-        )[0][0];
-        searchCache.delete(oldestKey);
-      }
-
-      setModels(result.models);
-      setTotal(result.total);
-      setHasMore(result.hasMore);
-      setIsLoading(false);
-
-      return result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      setIsLoading(false);
-      throw error;
-    }
-  }, [cacheTime]);
+    },
+    [cacheTime],
+  );
 
   /**
    * Get all providers
@@ -138,7 +156,7 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
         throw new Error(`API error: ${response.status}`);
       }
 
-      const json = await response.json();
+      const json = (await response.json()) as ApiResponse<{ providers: any[] }>;
 
       if (!json.success) {
         throw new Error(json.error || 'Unknown error');
@@ -167,10 +185,11 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
         if (response.status === 404) {
           return null;
         }
+
         throw new Error(`API error: ${response.status}`);
       }
 
-      const json = await response.json();
+      const json = (await response.json()) as ApiResponse<{ model: NeoModel }>;
 
       if (!json.success) {
         return null;
@@ -180,6 +199,7 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
+
       return null;
     }
   }, []);
@@ -195,7 +215,7 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
         throw new Error(`API error: ${response.status}`);
       }
 
-      const json = await response.json();
+      const json = (await response.json()) as ApiResponse<Record<string, NeoModel[]>>;
 
       if (!json.success) {
         throw new Error(json.error || 'Unknown error');
@@ -218,6 +238,7 @@ export function useNeomodels(options: UseNeomodelsOptions = {}): UseNeomodelsRet
   const refresh = useCallback(async () => {
     try {
       setIsLoading(true);
+
       const response = await fetch('/api/neomodels?action=refresh');
 
       if (!response.ok) {

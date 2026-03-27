@@ -43,9 +43,9 @@ export default class NeomodelsProvider extends BaseProvider {
    * Get dynamic models from neomodels database
    */
   async getDynamicModels(
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): Promise<ModelInfo[]> {
     try {
       const db = getNeomodelsDatabase();
@@ -57,8 +57,8 @@ export default class NeomodelsProvider extends BaseProvider {
       });
 
       const models: ModelInfo[] = searchResult.models
-        .filter(model => model.isActive && !model.deprecated)
-        .map(model => ({
+        .filter((model) => model.isActive && !model.deprecated)
+        .map((model) => ({
           name: model.id,
           label: `${model.name} (${model.provider})`,
           provider: 'Neomodels',
@@ -81,34 +81,28 @@ export default class NeomodelsProvider extends BaseProvider {
   }
 
   /**
-   * Get language model for neomodels
+   * Get model instance for neomodels
    * Routes to appropriate provider based on model ID
    */
-  async getLanguageModel(options: {
+  getModelInstance(options: {
     model: string;
+    serverEnv: Env;
     apiKeys?: Record<string, string>;
-    settings?: IProviderSetting;
-    serverEnv?: Record<string, string>;
-  }): Promise<LanguageModelV1 | null> {
-    const { model, apiKeys, settings, serverEnv } = options;
+    providerSettings?: Record<string, IProviderSetting>;
+  }): LanguageModelV1 {
+    const { model, apiKeys, providerSettings } = options;
 
-    try {
-      const db = getNeomodelsDatabase();
-      await db.initialize();
+    // For neomodels, we route based on model prefix or use a default
+    const parts = model.split('/');
+    const providerPrefix = parts[0]?.toLowerCase() || '';
 
-      // Get model details
-      const modelDetails = await db.getModel(model);
-      if (!modelDetails) {
-        console.error(`Model ${model} not found in neomodels database`);
-        return null;
-      }
+    const result = this.routeToProvider(providerPrefix, model, apiKeys, providerSettings?.[this.name], undefined);
 
-      // Route to appropriate provider
-      return this.routeToProvider(modelDetails.provider, model, apiKeys, settings, serverEnv);
-    } catch (error) {
-      console.error('Error routing neomodels request:', error);
-      return null;
+    if (!result) {
+      throw new Error(`Could not create model instance for ${model}`);
     }
+
+    return result;
   }
 
   /**
@@ -304,10 +298,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create Meta/Llama model (stub - requires compatible endpoint)
    */
   private createMetaModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     // Meta models are typically accessed through aggregators or compatible endpoints
     console.warn('Meta models should be accessed through a compatible provider');
@@ -349,10 +343,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create xAI/Grok model (stub - requires compatible endpoint)
    */
   private createXAIModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('xAI models require additional configuration');
     return null;
@@ -362,10 +356,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create Groq model (stub - requires compatible endpoint)
    */
   private createGroqModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Groq models require additional configuration');
     return null;
@@ -375,10 +369,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create AWS/Bedrock model (stub)
    */
   private createAWSModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('AWS Bedrock models require additional configuration');
     return null;
@@ -388,10 +382,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create Together model (stub)
    */
   private createTogetherModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Together AI models require additional configuration');
     return null;
@@ -431,10 +425,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create HuggingFace model (stub)
    */
   private createHuggingFaceModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('HuggingFace models require additional configuration');
     return null;
@@ -444,10 +438,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create Replicate model (stub)
    */
   private createReplicateModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Replicate models require additional configuration');
     return null;
@@ -457,10 +451,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create Stability AI model (stub)
    */
   private createStabilityAIModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('Stability AI models require additional configuration');
     return null;
@@ -560,10 +554,10 @@ export default class NeomodelsProvider extends BaseProvider {
    * Create NVIDIA model (stub)
    */
   private createNvidiaModel(
-    model: string,
-    apiKeys?: Record<string, string>,
-    settings?: IProviderSetting,
-    serverEnv?: Record<string, string>,
+    _model: string,
+    _apiKeys?: Record<string, string>,
+    _settings?: IProviderSetting,
+    _serverEnv?: Record<string, string>,
   ): LanguageModelV1 | null {
     console.warn('NVIDIA models require additional configuration');
     return null;
@@ -582,7 +576,7 @@ export default class NeomodelsProvider extends BaseProvider {
     const keyMap: Record<string, string> = {
       '302.AI': 'NEOMODELS_302AI_API_KEY',
       'Abacus AI': 'NEOMODELS_ABACUSAI_API_KEY',
-      'AIHubMix': 'NEOMODELS_AIHMIX_API_KEY',
+      AIHubMix: 'NEOMODELS_AIHMIX_API_KEY',
       'Alibaba DashScope': 'NEOMODELS_DASHSCOPE_API_KEY',
     };
 

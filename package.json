@@ -105,7 +105,7 @@
     "@remix-run/react": "^2.15.2",
     "compression": "^1.7.4",
     "express": "^4.21.0",
-    "remix-flat-routes": "^0.3.4",
+    "remix-flat-routes": "^0.8.5",
     "@vercel/analytics": "^1.4.1",
     "@tanstack/react-virtual": "^3.13.0",
     "@types/react-beautiful-dnd": "^13.1.8",

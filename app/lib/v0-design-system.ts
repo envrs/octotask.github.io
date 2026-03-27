@@ -1,9 +1,9 @@
 /**
  * v0 Design System Integration
- * 
+ *
  * This module provides design tokens and utilities that map v0's design system
  * to the existing Bolt UnoCSS-based styling system.
- * 
+ *
  * v0 uses a clean, minimal design language with:
  * - 4-5 core colors (primary, secondary, success, danger, warning)
  * - Clear typography hierarchy
@@ -27,7 +27,7 @@ export const v0Colors = {
     900: 'var(--accent-900)',
     950: 'var(--accent-950)',
   },
-  
+
   // Neutral/Gray - Background and text
   neutral: {
     50: 'var(--gray-50)',
@@ -67,14 +67,15 @@ export const v0Spacing = {
 export const v0Typography = {
   // Font sizes
   sizes: {
-    'xs': '12px',
-    'sm': '14px',
-    'base': '16px',
-    'lg': '18px',
-    'xl': '20px',
+    xs: '12px',
+    sm: '14px',
+    base: '16px',
+    lg: '18px',
+    xl: '20px',
     '2xl': '24px',
     '3xl': '30px',
   },
+
   // Font weights
   weights: {
     light: 300,
@@ -83,6 +84,7 @@ export const v0Typography = {
     semibold: 600,
     bold: 700,
   },
+
   // Line heights for readability
   lineHeights: {
     tight: 1.2,
@@ -205,8 +207,15 @@ export function v0Classes(variant: string, tokens: Record<string, string>): stri
  */
 export function v0Responsive(mobile: string, tablet?: string, desktop?: string): string {
   const classes = [mobile];
-  if (tablet) classes.push(`md:${tablet}`);
-  if (desktop) classes.push(`lg:${desktop}`);
+
+  if (tablet) {
+    classes.push(`md:${tablet}`);
+  }
+
+  if (desktop) {
+    classes.push(`lg:${desktop}`);
+  }
+
   return classes.join(' ');
 }
 

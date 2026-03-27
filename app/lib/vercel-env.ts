@@ -1,6 +1,6 @@
 /**
  * Vercel Environment Variables Configuration
- * 
+ *
  * This module provides utilities for managing Vercel-specific environment variables
  * and features that are available during deployment.
  */
@@ -18,6 +18,7 @@ export function getVercelEnvironment(): VercelEnvironment {
   if (typeof process !== 'undefined' && process.env.VERCEL_ENV) {
     return process.env.VERCEL_ENV as VercelEnvironment;
   }
+
   return 'development';
 }
 
@@ -66,13 +67,13 @@ export function getVercelMetadata() {
 export const VERCEL_FEATURES = {
   // Enable Vercel Analytics
   ANALYTICS_ENABLED: process.env.VITE_VERCEL_ANALYTICS_ENABLED !== 'false',
-  
+
   // Enable automatic redirects
   REDIRECTS_ENABLED: process.env.VITE_VERCEL_REDIRECTS_ENABLED !== 'false',
-  
+
   // Enable Vercel Toolbar (dev/preview only)
   TOOLBAR_ENABLED: process.env.VITE_VERCEL_TOOLBAR_ENABLED === 'true',
-  
+
   // Enable performance monitoring
   PERFORMANCE_MONITORING_ENABLED: process.env.VITE_VERCEL_PERFORMANCE_ENABLED !== 'false',
 };
@@ -93,13 +94,13 @@ export const SECURITY_HEADERS = {
 export const CACHE_HEADERS = {
   // HTML files - revalidate frequently
   html: 'public, max-age=3600, must-revalidate',
-  
+
   // Static assets - long cache duration
   assets: 'public, max-age=31536000, immutable',
-  
+
   // API responses - vary cache based on route
   api: 'public, max-age=60, s-maxage=120, stale-while-revalidate=86400',
-  
+
   // Default
   default: 'public, max-age=60, s-maxage=120',
 };

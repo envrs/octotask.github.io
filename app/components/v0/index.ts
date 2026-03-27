@@ -1,9 +1,9 @@
 /**
  * v0 Design System Components
- * 
+ *
  * This directory contains React components that implement v0's design language.
  * They work seamlessly with the existing Bolt UnoCSS styling system.
- * 
+ *
  * All components follow these principles:
  * - Clean, minimal aesthetic
  * - Accessible (WCAG 2.1 AA)
@@ -16,14 +16,7 @@
 export { V0Button, type V0ButtonProps, v0ButtonVariants } from './Button';
 
 // Export Card and subcomponents
-export {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-} from './Card';
+export { Card, CardHeader, CardBody, CardFooter, CardTitle, CardDescription } from './Card';
 
 // Export Input components
 export { Input, TextArea, type InputProps, type TextAreaProps } from './Input';

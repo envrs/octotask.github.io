@@ -1,6 +1,6 @@
 /**
  * Vercel Analytics Integration
- * 
+ *
  * This module provides analytics tracking powered by Vercel's analytics service.
  * It automatically tracks:
  * - Page views
@@ -15,8 +15,10 @@ import { Analytics } from '@vercel/analytics/react';
  * Should be called in the root layout
  */
 export function initializeAnalytics() {
-  // Analytics is automatically initialized when the component is rendered
-  // See root.tsx for implementation
+  /*
+   * Analytics is automatically initialized when the component is rendered
+   * See root.tsx for implementation
+   */
   return Analytics;
 }
 
