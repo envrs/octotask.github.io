@@ -87,7 +87,7 @@ export const Markdown = memo(
             return <ThoughtBox title="Thought process">{children}</ThoughtBox>;
           }
 
-          if (className?.includes('__octotaskQuickAction__') || dataProps?.dataBoltQuickAction) {
+          if (className?.includes('__octotaskQuickAction__') || dataProps?.dataOctotaskQuickAction) {
             return <div className="flex items-center gap-2 flex-wrap mt-3.5">{children}</div>;
           }
 
@@ -121,7 +121,7 @@ export const Markdown = memo(
 
           if (
             dataProps?.class?.toString().includes('__octotaskQuickAction__') ||
-            dataProps?.dataBoltQuickAction === 'true'
+            dataProps?.dataOctotaskQuickAction === 'true'
           ) {
             const type = dataProps['data-type'] || dataProps.dataType;
             const message = dataProps['data-message'] || dataProps.dataMessage;

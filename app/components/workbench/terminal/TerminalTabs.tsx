@@ -153,7 +153,7 @@ export const TerminalTabs = memo(() => {
                       onClick={() => setActiveTerminal(index)}
                     >
                       <div className="i-ph:terminal-window-duotone text-lg" />
-                      Bolt Terminal
+                      Octotask Terminal
                     </button>
                   ) : (
                     <React.Fragment>
@@ -200,7 +200,7 @@ export const TerminalTabs = memo(() => {
                   terminal.focus();
 
                   if (activeTerminal === 0) {
-                    workbenchStore.attachBoltTerminal(terminal);
+                    workbenchStore.attachOctotaskTerminal(terminal);
                   } else {
                     workbenchStore.attachTerminal(terminal);
                   }
@@ -234,7 +234,7 @@ export const TerminalTabs = memo(() => {
                         terminalRefs.current.set(index, ref);
                       }
                     }}
-                    onTerminalReady={(terminal) => workbenchStore.attachBoltTerminal(terminal)}
+                    onTerminalReady={(terminal) => workbenchStore.attachOctotaskTerminal(terminal)}
                     onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
                     theme={theme}
                   />

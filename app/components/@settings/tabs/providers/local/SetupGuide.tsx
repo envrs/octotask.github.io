@@ -417,7 +417,7 @@ function SetupGuide({ onBack }: { onBack: () => void }) {
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs text-octotask-elements-textSecondary">
-                    To work with Bolt DIY, you MUST enable CORS in LM Studio:
+                    To work with Octotask DIY, you MUST enable CORS in LM Studio:
                   </p>
                   <ol className="text-xs text-octotask-elements-textSecondary space-y-1 list-decimal list-inside ml-2">
                     <li>In Server Settings, check "Enable CORS"</li>

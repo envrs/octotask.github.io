@@ -1,5 +1,5 @@
 appId: com.stackblitz.octotask.diy
-productName: Bolt Local
+productName: Octotask Local
 directories:
   buildResources: build
   output: dist

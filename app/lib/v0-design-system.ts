@@ -2,7 +2,7 @@
  * v0 Design System Integration
  *
  * This module provides design tokens and utilities that map v0's design system
- * to the existing Bolt UnoCSS-based styling system.
+ * to the existing Octotask UnoCSS-based styling system.
  *
  * v0 uses a clean, minimal design language with:
  * - 4-5 core colors (primary, secondary, success, danger, warning)

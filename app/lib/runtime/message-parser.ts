@@ -1,5 +1,5 @@
-import type { ActionType, BoltAction, BoltActionData, FileAction, ShellAction, SupabaseAction } from '~/types/actions';
-import type { BoltArtifactData } from '~/types/artifact';
+import type { ActionType, OctotaskAction, OctotaskActionData, FileAction, ShellAction, SupabaseAction } from '~/types/actions';
+import type { OctotaskArtifactData } from '~/types/artifact';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
 
@@ -7,12 +7,12 @@ const ARTIFACT_TAG_OPEN = '<octotaskArtifact';
 const ARTIFACT_TAG_CLOSE = '</octotaskArtifact>';
 const ARTIFACT_ACTION_TAG_OPEN = '<octotaskAction';
 const ARTIFACT_ACTION_TAG_CLOSE = '</octotaskAction>';
-const BOLT_QUICK_ACTIONS_OPEN = '<octotask-quick-actions>';
-const BOLT_QUICK_ACTIONS_CLOSE = '</octotask-quick-actions>';
+const OCTOTASK_QUICK_ACTIONS_OPEN = '<octotask-quick-actions>';
+const OCTOTASK_QUICK_ACTIONS_CLOSE = '</octotask-quick-actions>';
 
 const logger = createScopedLogger('MessageParser');
 
-export interface ArtifactCallbackData extends BoltArtifactData {
+export interface ArtifactCallbackData extends OctotaskArtifactData {
   messageId: string;
   artifactId?: string;
 }
@@ -21,7 +21,7 @@ export interface ActionCallbackData {
   artifactId: string;
   messageId: string;
   actionId: string;
-  action: BoltAction;
+  action: OctotaskAction;
 }
 
 export type ArtifactCallback = (data: ArtifactCallbackData) => void;
@@ -52,8 +52,8 @@ interface MessageState {
   insideArtifact: boolean;
   insideAction: boolean;
   artifactCounter: number;
-  currentArtifact?: BoltArtifactData;
-  currentAction: BoltActionData;
+  currentArtifact?: OctotaskArtifactData;
+  currentAction: OctotaskActionData;
   actionId: number;
 }
 
@@ -100,11 +100,11 @@ export class StreamingMessageParser {
     let earlyBreak = false;
 
     while (i < input.length) {
-      if (input.startsWith(BOLT_QUICK_ACTIONS_OPEN, i)) {
-        const actionsBlockEnd = input.indexOf(BOLT_QUICK_ACTIONS_CLOSE, i);
+      if (input.startsWith(OCTOTASK_QUICK_ACTIONS_OPEN, i)) {
+        const actionsBlockEnd = input.indexOf(OCTOTASK_QUICK_ACTIONS_CLOSE, i);
 
         if (actionsBlockEnd !== -1) {
-          const actionsBlockContent = input.slice(i + BOLT_QUICK_ACTIONS_OPEN.length, actionsBlockEnd);
+          const actionsBlockContent = input.slice(i + OCTOTASK_QUICK_ACTIONS_OPEN.length, actionsBlockEnd);
 
           // Find all <octotask-quick-action ...>label</octotask-quick-action> inside
           const quickActionRegex = /<octotask-quick-action([^>]*)>([\s\S]*?)<\/octotask-quick-action>/g;
@@ -126,7 +126,7 @@ export class StreamingMessageParser {
             );
           }
           output += createQuickActionGroup(buttons);
-          i = actionsBlockEnd + BOLT_QUICK_ACTIONS_CLOSE.length;
+          i = actionsBlockEnd + OCTOTASK_QUICK_ACTIONS_CLOSE.length;
           continue;
         }
       }
@@ -171,7 +171,7 @@ export class StreamingMessageParser {
                */
               actionId: String(state.actionId - 1),
 
-              action: currentAction as BoltAction,
+              action: currentAction as OctotaskAction,
             });
 
             state.insideAction = false;
@@ -217,7 +217,7 @@ export class StreamingMessageParser {
                 artifactId: currentArtifact.id,
                 messageId,
                 actionId: String(state.actionId++),
-                action: state.currentAction as BoltAction,
+                action: state.currentAction as OctotaskAction,
               });
 
               i = actionEndIndex + 1;
@@ -280,7 +280,7 @@ export class StreamingMessageParser {
                 id: artifactId,
                 title: artifactTitle,
                 type,
-              } satisfies BoltArtifactData;
+              } satisfies OctotaskArtifactData;
 
               state.currentArtifact = currentArtifact;
 

@@ -137,7 +137,7 @@ ${commandString}
   };
 }
 
-export function escapeBoltArtifactTags(input: string) {
+export function escapeOctotaskArtifactTags(input: string) {
   // Regular expression to match octotaskArtifact tags and their content
   const regex = /(<octotaskArtifact[^>]*>)([\s\S]*?)(<\/octotaskArtifact>)/g;
 
@@ -153,7 +153,7 @@ export function escapeBoltArtifactTags(input: string) {
   });
 }
 
-export function escapeBoltAActionTags(input: string) {
+export function escapeOctotaskAActionTags(input: string) {
   // Regular expression to match octotaskArtifact tags and their content
   const regex = /(<octotaskAction[^>]*>)([\s\S]*?)(<\/octotaskAction>)/g;
 
@@ -169,8 +169,8 @@ export function escapeBoltAActionTags(input: string) {
   });
 }
 
-export function escapeBoltTags(input: string) {
-  return escapeBoltArtifactTags(escapeBoltAActionTags(input));
+export function escapeOctotaskTags(input: string) {
+  return escapeOctotaskArtifactTags(escapeOctotaskAActionTags(input));
 }
 
 // We have this seperate function to simplify the restore snapshot process in to one single artifact.

@@ -93,7 +93,7 @@ export function extractRelativePath(filePath: string) {
  * <octotask_file_modifications>
  * <diff path="/home/project/index.js">
  * - console.log('Hello, World!');
- * + console.log('Hello, Bolt!');
+ * + console.log('Hello, Octotask!');
  * </diff>
  * </octotask_file_modifications>
  * ```
