@@ -90,7 +90,7 @@ class NeomodelsDatabase {
       const response = await fetch('https://neomodels.vercel.app/api/models', {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'bolt.diy/neomodels-integration',
+          'User-Agent': 'octotask.diy/neomodels-integration',
         },
       });
 

@@ -45,8 +45,8 @@ export function extractPropertiesFromMessage(message: Omit<Message, 'id'>): {
 }
 
 export function simplifyBoltActions(input: string): string {
-  // Using regex to match boltAction tags that have type="file"
-  const regex = /(<boltAction[^>]*type="file"[^>]*>)([\s\S]*?)(<\/boltAction>)/g;
+  // Using regex to match octotaskAction tags that have type="file"
+  const regex = /(<octotaskAction[^>]*type="file"[^>]*>)([\s\S]*?)(<\/octotaskAction>)/g;
 
   // Replace each matching occurrence
   return input.replace(regex, (_0, openingTag, _2, closingTag) => {
@@ -82,10 +82,10 @@ export function createFilesContext(files: FileMap, useRelativePath?: boolean) {
         filePath = path.replace('/home/project/', '');
       }
 
-      return `<boltAction type="file" filePath="${filePath}">${codeWithLinesNumbers}</boltAction>`;
+      return `<octotaskAction type="file" filePath="${filePath}">${codeWithLinesNumbers}</octotaskAction>`;
     });
 
-  return `<boltArtifact id="code-content" title="Code Content" >\n${fileContexts.join('\n')}\n</boltArtifact>`;
+  return `<octotaskArtifact id="code-content" title="Code Content" >\n${fileContexts.join('\n')}\n</octotaskArtifact>`;
 }
 
 export function extractCurrentContext(messages: Message[]) {

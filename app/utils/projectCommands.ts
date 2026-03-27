@@ -116,12 +116,12 @@ export function createCommandsMessage(commands: ProjectCommands): Message | null
 
   if (commands.setupCommand) {
     commandString += `
-<boltAction type="shell">${commands.setupCommand}</boltAction>`;
+<octotaskAction type="shell">${commands.setupCommand}</octotaskAction>`;
   }
 
   if (commands.startCommand) {
     commandString += `
-<boltAction type="start">${commands.startCommand}</boltAction>
+<octotaskAction type="start">${commands.startCommand}</octotaskAction>
 `;
   }
 
@@ -129,17 +129,17 @@ export function createCommandsMessage(commands: ProjectCommands): Message | null
     role: 'assistant',
     content: `
 ${commands.followupMessage ? `\n\n${commands.followupMessage}` : ''}
-<boltArtifact id="project-setup" title="Project Setup">
+<octotaskArtifact id="project-setup" title="Project Setup">
 ${commandString}
-</boltArtifact>`,
+</octotaskArtifact>`,
     id: generateId(),
     createdAt: new Date(),
   };
 }
 
 export function escapeBoltArtifactTags(input: string) {
-  // Regular expression to match boltArtifact tags and their content
-  const regex = /(<boltArtifact[^>]*>)([\s\S]*?)(<\/boltArtifact>)/g;
+  // Regular expression to match octotaskArtifact tags and their content
+  const regex = /(<octotaskArtifact[^>]*>)([\s\S]*?)(<\/octotaskArtifact>)/g;
 
   return input.replace(regex, (match, openTag, content, closeTag) => {
     // Escape the opening tag
@@ -154,8 +154,8 @@ export function escapeBoltArtifactTags(input: string) {
 }
 
 export function escapeBoltAActionTags(input: string) {
-  // Regular expression to match boltArtifact tags and their content
-  const regex = /(<boltAction[^>]*>)([\s\S]*?)(<\/boltAction>)/g;
+  // Regular expression to match octotaskArtifact tags and their content
+  const regex = /(<octotaskAction[^>]*>)([\s\S]*?)(<\/octotaskAction>)/g;
 
   return input.replace(regex, (match, openTag, content, closeTag) => {
     // Escape the opening tag
@@ -184,12 +184,12 @@ export function createCommandActionsString(commands: ProjectCommands): string {
 
   if (commands.setupCommand) {
     commandString += `
-<boltAction type="shell">${commands.setupCommand}</boltAction>`;
+<octotaskAction type="shell">${commands.setupCommand}</octotaskAction>`;
   }
 
   if (commands.startCommand) {
     commandString += `
-<boltAction type="start">${commands.startCommand}</boltAction>
+<octotaskAction type="start">${commands.startCommand}</octotaskAction>
 `;
   }
 
